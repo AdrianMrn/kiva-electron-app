@@ -1,7 +1,9 @@
 const OAuth = require("oauth");
+const { shell } = require("electron");
+const electronPrompt = require("electron-prompt");
 
 const request_token_url = "https://api.kivaws.org/oauth/request_token.json";
-const access_token_url = "https://api.kivaws.org/oauth/access_token";
+const access_token_url = "https://api.kivaws.org/oauth/access_token.json";
 const consumer_key = "com.spatie.kiva-electron-app";
 const consumer_secret = "Rw8Nh0xHX5Os-5coEWhCezY4A-KNA5wL";
 const authorization_url =
@@ -20,38 +22,60 @@ const consumer = new OAuth.OAuth(
   "HMAC-SHA1"
 );
 
-function getRequestTokenAndAuthorizeUrl() {
-  return new Promise(resolve => {
-    consumer.getOAuthRequestToken(
-      { oauth_callback: "oob" },
-      (err, _1, _2, queryString) => {
-        if (err) console.err(err);
+consumer.setClientOptions({ followRedirects: false });
 
-        // { oauth_token: '…', oauth_token_secret: '…' }
-        const requestToken = JSON.parse(Object.keys(queryString)[0]);
+function authWithKiva() {
+  consumer.getOAuthRequestToken(
+    { oauth_callback: "oob" },
+    (err, _1, _2, queryString) => {
+      if (err) console.error(err);
 
-        const authorizeUrl = `${authorization_url}&oauth_token=${requestToken.oauth_token}&oauth_callback=oob`;
+      // { oauth_token: '…', oauth_token_secret: '…' }
+      const requestToken = JSON.parse(Object.keys(queryString)[0]);
 
-        console.log(requestToken);
-        resolve({ requestToken, authorizeUrl });
-      }
-    );
-  });
+      const authorizeUrl = `${authorization_url}&oauth_token=${requestToken.oauth_token}&oauth_callback=oob`;
+
+      shell.openExternal(authorizeUrl);
+
+      // TODO: electronPrompt seems to break something. Get the access code in a different way.
+      // maybe try electron-osx-prompt
+      electronPrompt({
+        title: "Enter your Kiva authorization code",
+        label: "Kiva authorization code:",
+        value: "",
+        type: "input"
+      })
+        .then(verifier => {
+          getAccessToken(verifier, requestToken);
+        })
+        .catch(console.error);
+    }
+  );
 }
 
 function getAccessToken(oauthVerifier, requestToken) {
-  console.log(typeof oauthVerifier, oauthVerifier);
-  console.log(requestToken.oauth_token, requestToken.oauth_token_secret);
+  /* console.log(oauthVerifier, requestToken); */
+
+  /* console.log(consumer); */
 
   consumer.getOAuthAccessToken(
     requestToken.oauth_token,
     requestToken.oauth_token_secret,
     oauthVerifier,
     (err, token, token_secret, queryString) => {
-      console.log(err, token, token_secret, queryString);
+      console.log("hm");
+      if (err) console.error(err);
+
+      console.log(token, token_secret, queryString);
     }
   );
 }
+
+/* getAccessToken('4RT5HC', {
+  oauth_token: 'lVbIUt9mmkGISmcuhAroAw6zD7AHBL4p;com.spatie.kiva-electron-app',
+  oauth_token_secret: 'HOPTWdjuiDBkCbKZYYdPBHxGZrmCENzd',
+  oauth_callback_confirmed: 'true'
+}) */
 
 /* getAccessToken("3G9BED", {
   oauth_token: "1YC8zcWh2PE66nW04tTggR.Q-Kq8Yf4b;com.spatie.kiva-electron-app",
@@ -70,6 +94,5 @@ function getAccessToken(oauthVerifier, requestToken) {
 ); */
 
 module.exports = {
-  getRequestTokenAndAuthorizeUrl,
-  getAccessToken
+  authWithKiva
 };
