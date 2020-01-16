@@ -19,11 +19,11 @@ const consumer = new OAuth.OAuth(
 );
 
 function getRequestTokenAndAuthorizeUrl() {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     consumer.getOAuthRequestToken(
       { oauth_callback: "oob" },
       (err, _1, _2, queryString) => {
-        if (err) console.error(err);
+        if (err) return reject(err);
 
         // { oauth_token: '…', oauth_token_secret: '…' }
         const requestToken = JSON.parse(Object.keys(queryString)[0]);
@@ -36,13 +36,13 @@ function getRequestTokenAndAuthorizeUrl() {
 }
 
 function getAccessToken(oauthVerifier, requestToken) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     consumer.getOAuthAccessToken(
       requestToken.oauth_token,
       requestToken.oauth_token_secret,
       oauthVerifier,
       (err, _1, _2, queryString) => {
-        if (err) console.error(err);
+        if (err) return reject(err);
 
         const authToken = JSON.parse(Object.keys(queryString)[0]);
 
@@ -53,13 +53,13 @@ function getAccessToken(oauthVerifier, requestToken) {
 }
 
 function getKivaBalance(accessToken) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     consumer.get(
       balanceUrl,
       accessToken.oauth_token,
       accessToken.oauth_token_secret,
       (err, data, _) => {
-        if (err) console.error(err);
+        if (err) return reject(err);
 
         resolve(JSON.parse(data).user_balance.balance);
       }

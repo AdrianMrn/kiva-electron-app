@@ -1,4 +1,12 @@
-const { app, shell, Menu, Tray, BrowserWindow, ipcMain } = require("electron");
+const {
+  app,
+  shell,
+  Menu,
+  Tray,
+  BrowserWindow,
+  ipcMain,
+  dialog
+} = require("electron");
 const fs = require("fs");
 
 const {
@@ -15,7 +23,7 @@ app.on("window-all-closed", e => e.preventDefault());
 // Query to get balance: { my { userAccount { balance } } }
 
 function authorizeWithKiva() {
-  return new Promise(async resolve => {
+  return new Promise(async (resolve, reject) => {
     // Check if we have already saved an access token. If so, use that instead of authorizing again.
     if (fs.existsSync("accessToken.json")) {
       token = fs.readFileSync("accessToken.json");
@@ -27,11 +35,19 @@ function authorizeWithKiva() {
       }
     }
 
+    let requestToken, authorizeUrl;
+
     // oauth magic
-    const {
-      requestToken,
-      authorizeUrl
-    } = await getRequestTokenAndAuthorizeUrl();
+    try {
+      const {
+        requestToken: token,
+        authorizeUrl: url
+      } = await getRequestTokenAndAuthorizeUrl();
+      requestToken = token;
+      authorizeUrl = url;
+    } catch (error) {
+      return reject(error);
+    }
 
     // Opening the Kiva authorize page in a browser
     shell.openExternal(authorizeUrl);
@@ -44,19 +60,26 @@ function authorizeWithKiva() {
       height: 150,
       alwaysOnTop: true,
       resizable: false,
-      minimizable: false,
-      fullscreenable: false,
+      frame: false,
       webPreferences: {
         nodeIntegration: true
       }
     });
-    win.loadURL(`file://${__dirname}/prompt.html`);
+    win.loadURL(`file://${__dirname}/prompt/index.html`);
     win.show();
+
+    win.addListener("closed", reject);
 
     // When the prompt submits, close it, get the access token and save it in a file.
     ipcMain.on("submitAuthCode", async (_, authCode) => {
+      win.removeAllListeners("closed");
       win.close();
-      accessToken = await getAccessToken(authCode, requestToken);
+
+      try {
+        accessToken = await getAccessToken(authCode, requestToken);
+      } catch (error) {
+        return reject(error);
+      }
 
       fs.writeFileSync("accessToken.json", JSON.stringify(accessToken));
 
@@ -75,8 +98,12 @@ function setAutoRefresh() {
 }
 
 async function refreshBalance() {
-  const balance = await getKivaBalance(accessToken);
-  setBalance(balance);
+  try {
+    const balance = await getKivaBalance(accessToken);
+    setBalance(balance);
+  } catch (error) {
+    throw new Error(error);
+  }
 }
 
 function openKiva() {
@@ -86,19 +113,36 @@ function openKiva() {
 let tray;
 app.on("ready", () => {
   // Initializing tray icon
-  tray = new Tray("./logo_kiva.png");
+  tray = new Tray(`${__dirname}/images/logo_kiva.png`);
+
+  const menu = [
+    { label: "Open Kiva", click: openKiva },
+    { label: "(re)authorize app with Kiva", click: authorizeWithKiva }
+  ];
 
   // Initializing context menu
-  const contextMenu = Menu.buildFromTemplate([
-    { label: "Open Kiva", click: openKiva },
-    { label: "Refresh Balance", click: refreshBalance },
-    { label: "Authorize app with Kiva", click: authorizeWithKiva }
-  ]);
-  tray.setContextMenu(contextMenu);
+  tray.setContextMenu(Menu.buildFromTemplate(menu));
 
   // Initializing Kiva connection
-  authorizeWithKiva().then(() => {
-    refreshBalance();
-    setAutoRefresh();
-  });
+  authorizeWithKiva()
+    .then(() => {
+      refreshBalance();
+      setAutoRefresh();
+
+      tray.setContextMenu(
+        Menu.buildFromTemplate([
+          ...menu,
+          { label: "Refresh Balance", click: refreshBalance }
+        ])
+      );
+    })
+    .catch(err => {
+      if (err) console.error(err);
+
+      dialog.showMessageBoxSync(null, {
+        type: "error",
+        message:
+          "Something went wrong during the authentication. Please try again by pressing the tray icon."
+      });
+    });
 });

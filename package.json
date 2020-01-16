@@ -1,10 +1,12 @@
 {
   "name": "kiva-electron-app",
+  "productName": "Kiva Balance",
   "version": "1.0.0",
   "description": "An electron app to easily see your kiva balance",
   "main": "index.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "bundle": "electron-packager . --icon ./images/app-icon.icns --oveerwrite"
   },
   "author": "Adriaan Marain",
   "license": "ISC",
