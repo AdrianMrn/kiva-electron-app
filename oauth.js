@@ -4,11 +4,9 @@ const request_token_url = "https://api.kivaws.org/oauth/request_token.json";
 const access_token_url = "https://api.kivaws.org/oauth/access_token.json";
 const consumer_key = "com.spatie.kiva-electron-app";
 const consumer_secret = "Rw8Nh0xHX5Os-5coEWhCezY4A-KNA5wL";
-const authorization_url =
-  "https://www.kiva.org/oauth/authorize?response_type=code&client_id=" +
-  consumer_key;
+const authorization_url = `https://www.kiva.org/oauth/authorize?response_type=code&client_id=${consumer_key}&scope=user_balance`;
 
-/* const resource_url = "https://api.kivaws.org/v1/my/account.json"; */
+const balanceUrl = "https://api.kivaws.org/v1/my/balance.json";
 
 const consumer = new OAuth.OAuth(
   request_token_url,
@@ -25,7 +23,7 @@ function getRequestTokenAndAuthorizeUrl() {
     consumer.getOAuthRequestToken(
       { oauth_callback: "oob" },
       (err, _1, _2, queryString) => {
-        if (err) console.log(err);
+        if (err) console.error(err);
 
         // { oauth_token: '…', oauth_token_secret: '…' }
         const requestToken = JSON.parse(Object.keys(queryString)[0]);
@@ -44,7 +42,7 @@ function getAccessToken(oauthVerifier, requestToken) {
       requestToken.oauth_token_secret,
       oauthVerifier,
       (err, _1, _2, queryString) => {
-        if (err) console.log(err);
+        if (err) console.error(err);
 
         const authToken = JSON.parse(Object.keys(queryString)[0]);
 
@@ -57,13 +55,13 @@ function getAccessToken(oauthVerifier, requestToken) {
 function getKivaBalance(accessToken) {
   return new Promise(resolve => {
     consumer.get(
-      "https://api.kivaws.org/v1/my/balance.json",
+      balanceUrl,
       accessToken.oauth_token,
       accessToken.oauth_token_secret,
       (err, data, _) => {
-        if (err) console.log(err);
+        if (err) console.error(err);
 
-        resolve(data);
+        resolve(JSON.parse(data).user_balance.balance);
       }
     );
   });

@@ -76,7 +76,6 @@ function setAutoRefresh() {
 
 async function refreshBalance() {
   const balance = await getKivaBalance(accessToken);
-  console.log(balance);
   setBalance(balance);
 }
 
