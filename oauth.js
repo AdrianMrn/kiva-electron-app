@@ -1,6 +1,4 @@
 const OAuth = require("oauth");
-const { shell } = require("electron");
-const electronPrompt = require("electron-prompt");
 
 const request_token_url = "https://api.kivaws.org/oauth/request_token.json";
 const access_token_url = "https://api.kivaws.org/oauth/access_token.json";
@@ -22,48 +20,31 @@ const consumer = new OAuth.OAuth(
   "HMAC-SHA1"
 );
 
-consumer.setClientOptions({ followRedirects: false });
+function getRequestTokenAndAuthorizeUrl() {
+  return new Promise(resolve => {
+    consumer.getOAuthRequestToken(
+      { oauth_callback: "oob" },
+      (err, _1, _2, queryString) => {
+        if (err) console.error(err);
 
-function authWithKiva() {
-  consumer.getOAuthRequestToken(
-    { oauth_callback: "oob" },
-    (err, _1, _2, queryString) => {
-      if (err) console.error(err);
+        // { oauth_token: '…', oauth_token_secret: '…' }
+        const requestToken = JSON.parse(Object.keys(queryString)[0]);
+        const authorizeUrl = `${authorization_url}&oauth_token=${requestToken.oauth_token}&oauth_callback=oob`;
 
-      // { oauth_token: '…', oauth_token_secret: '…' }
-      const requestToken = JSON.parse(Object.keys(queryString)[0]);
-
-      const authorizeUrl = `${authorization_url}&oauth_token=${requestToken.oauth_token}&oauth_callback=oob`;
-
-      shell.openExternal(authorizeUrl);
-
-      // TODO: electronPrompt seems to break something. Get the access code in a different way.
-      // maybe try electron-osx-prompt
-      electronPrompt({
-        title: "Enter your Kiva authorization code",
-        label: "Kiva authorization code:",
-        value: "",
-        type: "input"
-      })
-        .then(verifier => {
-          getAccessToken(verifier, requestToken);
-        })
-        .catch(console.error);
-    }
-  );
+        resolve({ requestToken, authorizeUrl });
+      }
+    );
+  });
 }
 
 function getAccessToken(oauthVerifier, requestToken) {
-  /* console.log(oauthVerifier, requestToken); */
-
-  /* console.log(consumer); */
+  console.log('getAccessToken', oauthVerifier, requestToken);
 
   consumer.getOAuthAccessToken(
     requestToken.oauth_token,
     requestToken.oauth_token_secret,
     oauthVerifier,
     (err, token, token_secret, queryString) => {
-      console.log("hm");
       if (err) console.error(err);
 
       console.log(token, token_secret, queryString);
@@ -77,12 +58,6 @@ function getAccessToken(oauthVerifier, requestToken) {
   oauth_callback_confirmed: 'true'
 }) */
 
-/* getAccessToken("3G9BED", {
-  oauth_token: "1YC8zcWh2PE66nW04tTggR.Q-Kq8Yf4b;com.spatie.kiva-electron-app",
-  oauth_token_secret: "B7kJLsWQc3s-wPMoof7wq5A4NyKFZwBb",
-  oauth_callback_confirmed: "true"
-}); */
-
 /* oauth.get(
   "https://api.kivaws.org/v1/my/account.json",
   "your user token for this app", //test user token
@@ -94,5 +69,6 @@ function getAccessToken(oauthVerifier, requestToken) {
 ); */
 
 module.exports = {
-  authWithKiva
+  getRequestTokenAndAuthorizeUrl,
+  getAccessToken
 };
