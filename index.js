@@ -7,7 +7,9 @@ const {
   ipcMain,
   dialog
 } = require("electron");
-const fs = require("fs");
+
+const Store = require("electron-store");
+const store = new Store();
 
 const {
   getRequestTokenAndAuthorizeUrl,
@@ -25,8 +27,8 @@ app.on("window-all-closed", e => e.preventDefault());
 function authorizeWithKiva() {
   return new Promise(async (resolve, reject) => {
     // Check if we have already saved an access token. If so, use that instead of authorizing again.
-    if (fs.existsSync("accessToken.json")) {
-      token = fs.readFileSync("accessToken.json");
+    if (store.has("accessToken")) {
+      token = store.get("accessToken");
 
       if (token) {
         accessToken = JSON.parse(token);
@@ -81,7 +83,17 @@ function authorizeWithKiva() {
         return reject(error);
       }
 
-      fs.writeFileSync("accessToken.json", JSON.stringify(accessToken));
+      dialog.showMessageBoxSync(null, {
+        type: "error",
+        message: "2"
+      });
+
+      store.set("accessToken", JSON.stringify(accessToken));
+
+      dialog.showMessageBoxSync(null, {
+        type: "error",
+        message: "3"
+      });
 
       resolve();
     });
@@ -102,7 +114,10 @@ async function refreshBalance() {
     const balance = await getKivaBalance(accessToken);
     setBalance(balance);
   } catch (error) {
-    throw new Error(error);
+    dialog.showMessageBoxSync(null, {
+      type: "error",
+      message: error
+    });
   }
 }
 
