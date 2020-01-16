@@ -17,7 +17,7 @@ const {
   getKivaBalance
 } = require("./oauth");
 
-let accessToken;
+let accessToken, tray, hasOpenAtLogin;
 
 // needed because https://stackoverflow.com/questions/46596493/why-does-my-electron-app-quit-when-closing-a-renderer-window
 app.on("window-all-closed", e => e.preventDefault());
@@ -83,17 +83,7 @@ function authorizeWithKiva() {
         return reject(error);
       }
 
-      dialog.showMessageBoxSync(null, {
-        type: "error",
-        message: "2"
-      });
-
       store.set("accessToken", JSON.stringify(accessToken));
-
-      dialog.showMessageBoxSync(null, {
-        type: "error",
-        message: "3"
-      });
 
       resolve();
     });
@@ -125,14 +115,42 @@ function openKiva() {
   shell.openExternal("https://www.kiva.org/lend-by-category");
 }
 
-let tray;
+function logOut() {
+  store.delete("accessToken");
+  app.quit();
+}
+
+function setOpenAtLogin(openAtLogin) {
+  app.setLoginItemSettings({ openAtLogin });
+  hasOpenAtLogin = openAtLogin;
+}
+
 app.on("ready", () => {
+  // Hiding the app's dock icon
+  app.dock.hide();
+
+  // Setting whether the app opens at login
+  if (!store.has("isFirstLaunch")) {
+    setOpenAtLogin(true);
+    store.set("isFirstLaunch", false);
+  } else {
+    hasOpenAtLogin = app.getLoginItemSettings().openAtLogin;
+  }
+
   // Initializing tray icon
   tray = new Tray(`${__dirname}/images/logo_kiva.png`);
 
   const menu = [
     { label: "Open Kiva", click: openKiva },
-    { label: "(re)authorize app with Kiva", click: authorizeWithKiva }
+    { label: "(re)authorize app with Kiva", click: authorizeWithKiva },
+    {
+      label: "Open at login",
+      type: "checkbox",
+      checked: hasOpenAtLogin,
+      click: () => setOpenAtLogin(!hasOpenAtLogin)
+    },
+    { label: "Log out", click: logOut },
+    { label: "Quit", click: () => app.quit() }
   ];
 
   // Initializing context menu
@@ -146,8 +164,8 @@ app.on("ready", () => {
 
       tray.setContextMenu(
         Menu.buildFromTemplate([
-          ...menu,
-          { label: "Refresh Balance", click: refreshBalance }
+          { label: "Refresh Balance", click: refreshBalance },
+          ...menu
         ])
       );
     })
