@@ -130,24 +130,10 @@ detect-node@^2.0.4:
   resolved "https://registry.yarnpkg.com/detect-node/-/detect-node-2.0.4.tgz#014ee8f8f669c5c58023da64b8179c083a28c46c"
   integrity sha512-ZIzRpLJrOj7jjP2miAtgqIfmzbxa4ZOr5jJc601zklsfEx9oTzmmj2nVpIPRpNlRTIh8lc1kyViIY7BWSGNmKw==
 
-doc-ready@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/doc-ready/-/doc-ready-1.0.4.tgz#37f5391969cff994303fdfef2e5d50357f8164d3"
-  integrity sha1-N/U5GWnP+ZQwP9/vLl1QNX+BZNM=
-  dependencies:
-    eventie "^1"
-
 duplexer3@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
   integrity sha1-7gHdHKwO08vH/b6jfcCo8c4ALOI=
-
-electron-prompt@^1.5.0:
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/electron-prompt/-/electron-prompt-1.5.0.tgz#ee667c0ef82e328777ca22ca274eafcfaefd8f86"
-  integrity sha512-YMrrlvRAI8OP9NEdpncDVkZiHQlFYQLSYlRvHRtYw3G54/7DoxnWR25cEC2hAppy/JfUC6hXoBZB7PB4bQhBoA==
-  dependencies:
-    doc-ready "^1.0.4"
 
 electron@^7.1.9:
   version "7.1.9"
@@ -184,11 +170,6 @@ escape-string-regexp@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-2.0.0.tgz#a30304e99daa32e23b2fd20f51babd07cffca344"
   integrity sha512-UpzcLCXolUWcNu5HtVMHYdXJjArjsF9C0aNnquZYY4uW/Vu0miy5YoWvbV345HauVvcAUnpRuhMMcqTcGOY2+w==
-
-eventie@^1:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/eventie/-/eventie-1.0.6.tgz#d4ffc8b0c2b5e493c2aa1b22cbe918d3aee74437"
-  integrity sha1-1P/IsMK15JPCqhsiy+kY067nRDc=
 
 extract-zip@^1.0.3:
   version "1.6.7"

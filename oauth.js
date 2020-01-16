@@ -25,7 +25,7 @@ function getRequestTokenAndAuthorizeUrl() {
     consumer.getOAuthRequestToken(
       { oauth_callback: "oob" },
       (err, _1, _2, queryString) => {
-        if (err) console.error(err);
+        if (err) console.log(err);
 
         // { oauth_token: '…', oauth_token_secret: '…' }
         const requestToken = JSON.parse(Object.keys(queryString)[0]);
@@ -38,37 +38,39 @@ function getRequestTokenAndAuthorizeUrl() {
 }
 
 function getAccessToken(oauthVerifier, requestToken) {
-  console.log('getAccessToken', oauthVerifier, requestToken);
+  return new Promise(resolve => {
+    consumer.getOAuthAccessToken(
+      requestToken.oauth_token,
+      requestToken.oauth_token_secret,
+      oauthVerifier,
+      (err, _1, _2, queryString) => {
+        if (err) console.log(err);
 
-  consumer.getOAuthAccessToken(
-    requestToken.oauth_token,
-    requestToken.oauth_token_secret,
-    oauthVerifier,
-    (err, token, token_secret, queryString) => {
-      if (err) console.error(err);
+        const authToken = JSON.parse(Object.keys(queryString)[0]);
 
-      console.log(token, token_secret, queryString);
-    }
-  );
+        return resolve(authToken);
+      }
+    );
+  });
 }
 
-/* getAccessToken('4RT5HC', {
-  oauth_token: 'lVbIUt9mmkGISmcuhAroAw6zD7AHBL4p;com.spatie.kiva-electron-app',
-  oauth_token_secret: 'HOPTWdjuiDBkCbKZYYdPBHxGZrmCENzd',
-  oauth_callback_confirmed: 'true'
-}) */
+function getKivaBalance(accessToken) {
+  return new Promise(resolve => {
+    consumer.get(
+      "https://api.kivaws.org/v1/my/balance.json",
+      accessToken.oauth_token,
+      accessToken.oauth_token_secret,
+      (err, data, _) => {
+        if (err) console.log(err);
 
-/* oauth.get(
-  "https://api.kivaws.org/v1/my/account.json",
-  "your user token for this app", //test user token
-  "your user secret for this app", //test user secret
-  function(e, data, res) {
-    if (e) console.error(e);
-    console.log(require("util").inspect(data));
-  }
-); */
+        resolve(data);
+      }
+    );
+  });
+}
 
 module.exports = {
   getRequestTokenAndAuthorizeUrl,
-  getAccessToken
+  getAccessToken,
+  getKivaBalance
 };
