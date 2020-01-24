@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "bundle": "electron-packager . --icon ./images/app-icon.icns --overwrite"
+    "bundle": "electron-packager . --icon ./images/app-icon.icns --overwrite --out ./builds"
   },
   "author": "Adriaan Marain",
   "license": "ISC",
