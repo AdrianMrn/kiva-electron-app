@@ -22,8 +22,6 @@ let accessToken, tray, hasOpenAtLogin;
 // needed because https://stackoverflow.com/questions/46596493/why-does-my-electron-app-quit-when-closing-a-renderer-window
 app.on("window-all-closed", e => e.preventDefault());
 
-// Query to get balance: { my { userAccount { balance } } }
-
 function authorizeWithKiva() {
   return new Promise(async (resolve, reject) => {
     // Check if we have already saved an access token. If so, use that instead of authorizing again.

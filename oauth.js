@@ -1,9 +1,10 @@
 const OAuth = require("oauth");
+require("dotenv").config();
 
 const request_token_url = "https://api.kivaws.org/oauth/request_token.json";
 const access_token_url = "https://api.kivaws.org/oauth/access_token.json";
 const consumer_key = "com.spatie.kiva-electron-app";
-const consumer_secret = "Rw8Nh0xHX5Os-5coEWhCezY4A-KNA5wL";
+const consumer_secret = process.env.KIVA_CONSUMER_SECRET;
 const authorization_url = `https://www.kiva.org/oauth/authorize?response_type=code&client_id=${consumer_key}&scope=user_balance`;
 
 const balanceUrl = "https://api.kivaws.org/v1/my/balance.json";
