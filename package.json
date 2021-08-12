@@ -6,17 +6,17 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "bundle": "electron-packager . --icon ./images/app-icon.icns --overwrite --out ./builds"
+    "bundle": "electron-packager . --icon ./images/app-icon.icns --overwrite --out ./builds --platform=darwin --arch=arm64"
   },
   "author": "Adriaan Marain",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^7.1.9",
-    "electron-packager": "^14.2.0"
+    "electron": "^13.1.9",
+    "electron-packager": "^15.3.0"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
-    "electron-store": "^5.1.0",
+    "electron-store": "^8.0.0",
     "oauth": "^0.9.15"
   }
 }
